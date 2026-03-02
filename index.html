@@ -51,12 +51,10 @@
 </div>
 
 <script>
-    // --- URL AUTOMÁTICA DESDE TU GITHUB ---
     const URL_IMAGEN = "https://raw.githubusercontent.com/vergaranico292-code/Repuestos/main/MP1000.png";
 
     const piezas = [
         // IZQUIERDA
-       // IZQUIERDA - Ajustados al final de cada nombre
         { n: "Feed Plate", x: 8, y: 3, s: "100-001" },
         { n: "Locking Bolt", x: 9, y: 6, s: "100-002" },
         { n: "Torch Ring", x: 8, y: 9, s: "100-003" },
@@ -64,14 +62,14 @@
         { n: "Clamp Ring", x: 9, y: 23, s: "100-004" },
         { n: "Clamping Cylinder", x: 12, y: 26, s: "100-005" },
         { n: "Adjustment Ring", x: 11.5, y: 29.8, s: "100-006" },
-        { n: "Tramp Release Cylinder", x: 15.5, y: 32.5, s: "100-007" }, // Bajado un poco el Y
+        { n: "Tramp Release Cylinder", x: 15.5, y: 32.5, s: "100-007" }, //
         
         { n: "Head Ball", x: 8, y: 50, s: "100-008" },
         { n: "Head", x: 5, y: 53, s: "100-009" },
         { n: "Upper Head Bushing", x: 13, y: 56, s: "100-010" },
         { n: "Mantle", x: 6, y: 59, s: "100-011" },
         { n: "T-Seal", x: 6, y: 62, s: "100-012" },
-        { n: "Lower Head Bushing", x: 15.5, y: 65, s: "100-013" }, // Bajado un poco el Y
+        { n: "Lower Head Bushing", x: 15.5, y: 65, s: "100-013" }, //
         
         { n: "Mainframe Liner", x: 12, y: 77, s: "100-014" },
         { n: "U-Seal", x: 6, y: 80, s: "100-015" },
@@ -81,29 +79,33 @@
         { n: "Mainframe", x: 9, y: 92, s: "100-019" },
 
         // DERECHA
-        { n: "Feed Hopper", x: 93.8, y: 1.8, s: "200-001" },
-        { n: "Bowl Liner", x: 93.8, y: 4.5, s: "200-002" },
-        { n: "Adjustment Cap", x: 93.8, y: 7.2, s: "200-003" },
-        { n: "Bowl", x: 93.8, y: 9.9, s: "200-004" },
-        { n: "Pin", x: 93.8, y: 21.0, s: "200-005" },
-        { n: "Socket Liner", x: 93.8, y: 23.6, s: "200-006" },
-        { n: "Socket", x: 93.8, y: 26.3, s: "200-007" },
-        { n: "Hardware", x: 93.8, y: 37.5, s: "200-008" },
-        { n: "Bowl Adapter Ring", x: 93.8, y: 40.1, s: "200-009" },
-        { n: "Mainframe Seat Liner", x: 93.8, y: 42.8, s: "200-010" },
-        { n: "Eccentric", x: 93.8, y: 52.8, s: "200-011" },
-        { n: "Eccentric Bushing", x: 93.8, y: 55.4, s: "200-012" },
-        { n: "Counterweight", x: 93.8, y: 58.1, s: "200-013" },
-        { n: "Counterweight Guard", x: 93.8, y: 60.7, s: "200-014" },
-        { n: "Thrust Bearing", x: 93.8, y: 63.4, s: "200-015" },
-        { n: "Gear", x: 93.8, y: 66.0, s: "200-016" },
-        { n: "Countershaft Box", x: 93.8, y: 77.2, s: "200-017" },
-        { n: "Countershaft Box Guard", x: 93.8, y: 79.8, s: "200-018" },
-        { n: "Flinger Housing", x: 93.8, y: 82.4, s: "200-019" },
-        { n: "Oil Flinger", x: 93.8, y: 85.1, s: "200-020" },
-        { n: "Countershaft Bushing", x: 93.8, y: 87.7, s: "200-021" },
-        { n: "Countershaft", x: 93.8, y: 90.4, s: "200-022" },
-        { n: "Pinion", x: 93.8, y: 93.1, s: "200-023" }
+        { n: "Feed Hopper", x: 93.8, y: 2, s: "200-001" },
+        { n: "Bowl Liner", x: 93.8, y: 5, s: "200-002" },
+        { n: "Adjustment Cap", x: 93.8, y: 8, s: "200-003" },
+        { n: "Bowl", x: 93.8, y: 11, s: "200-004" },
+        
+        { n: "Pin", x: 93.8, y: 20, s: "200-005" },
+        { n: "Socket Liner", x: 93.8, y: 23, s: "200-006" },
+        { n: "Socket", x: 93.8, y: 26, s: "200-007" },
+        
+        { n: "Hardware", x: 93.8, y: 34, s: "200-008" },
+        { n: "Bowl Adapter Ring", x: 93.8, y: 37, s: "200-009" },
+        { n: "Mainframe Seat Liner", x: 93.8, y: 40, s: "200-010" },
+        
+        { n: "Eccentric", x: 93.8, y: 50, s: "200-011" },
+        { n: "Eccentric Bushing", x: 93.8, y: 53, s: "200-012" },
+        { n: "Counterweight", x: 93.8, y: 56, s: "200-013" },
+        { n: "Counterweight Guard", x: 93.8, y: 59, s: "200-014" },
+        { n: "Thrust Bearing", x: 93.8, y: 62, s: "200-015" },
+        { n: "Gear", x: 93.8, y: 65, s: "200-016" },
+        
+        { n: "Countershaft Box", x: 93.8, y: 74, s: "200-017" },
+        { n: "Countershaft Box Guard", x: 93.8, y: 77, s: "200-018" },
+        { n: "Flinger Housing", x: 93.8, y: 80, s: "200-019" },
+        { n: "Oil Flinger", x: 93.8, y: 83, s: "200-020" },
+        { n: "Countershaft Bushing", x: 93.8, y: 86, s: "200-021" },
+        { n: "Countershaft", x: 93.8, y: 89, s: "200-022" },
+        { n: "Pinion", x: 93.8, y: 92, s: "200-023" }
     ];
 
     const img = document.getElementById('img-chancador');
