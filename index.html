@@ -7,20 +7,30 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
     <style>
         body { font-family: sans-serif; background: #1a1a1a; color: white; margin: 0; overflow: hidden; touch-action: none; }
-        .header { background: #333; padding: 15px; text-align: center; border-bottom: 2px solid #ff9900; z-index: 100; position: relative; }
-        #viewport { width: 100vw; height: calc(100vh - 70px); cursor: grab; overflow: hidden; position: relative; background: #222; }
-        #zoom-container { position: absolute; transform-origin: 0 0; }
-        #img-chancador { display: block; height: 95vh; width: auto; pointer-events: none; }
+        .header { background: #333; padding: 10px; text-align: center; border-bottom: 2px solid #ff9900; z-index: 100; position: relative; height: 50px; box-sizing: border-box; }
+        #viewport { 
+            width: 100vw; 
+            height: calc(100vh - 50px); 
+            cursor: grab; 
+            overflow: hidden; 
+            position: relative; 
+            background: #222;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #zoom-container { position: relative; transform-origin: center; }
+        #img-chancador { max-height: 85vh; max-width: 95vw; display: block; pointer-events: none; }
         
+        #hotspots-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         .hotspot {
             position: absolute;
-            width: 14px; height: 14px;
+            width: 18px; height: 18px;
             background: rgba(255, 153, 0, 0.8);
             border: 2px solid #fff;
             border-radius: 50%;
             transform: translate(-50%, -50%);
             z-index: 10;
-            box-shadow: 0 0 8px rgba(255, 153, 0, 0.5);
         }
 
         #modal {
@@ -33,73 +43,60 @@
 <body>
 
 <div class="header">
-    <strong style="color: #ff9900;">VISOR REPUESTOS MP1000</strong><br>
-    <small>Toca los puntos para ver detalles</small>
+    <strong style="color: #ff9900;">VISOR MP1000</strong>
 </div>
 
 <div id="viewport">
     <div id="zoom-container">
-        <img id="img-chancador" src="" alt="Cargando diagrama...">
+        <img id="img-chancador" src="" alt="Cargando...">
         <div id="hotspots-layer"></div>
     </div>
 </div>
 
 <div id="modal">
-    <h3 id="m-nombre" style="color:#ff9900; margin:0 0 5px 0;">Pieza</h3>
-    <p style="margin:5px 0;"><strong>Código SAP:</strong> <span id="m-codigo"></span></p>
-    <button onclick="this.parentElement.style.display='none'" style="width:100%; padding:10px; background:#ff9900; color:white; border:none; border-radius:5px; font-weight:bold; cursor: pointer;">CERRAR</button>
+    <h3 id="m-nombre" style="color:#ff9900; margin:0;">Pieza</h3>
+    <p><strong>Código:</strong> <span id="m-codigo"></span></p>
+    <button onclick="this.parentElement.style.display='none'" style="width:100%; padding:10px; background:#ff9900; color:white; border:none; border-radius:5px; font-weight:bold;">CERRAR</button>
 </div>
 
 <script>
     const URL_IMAGEN = "https://raw.githubusercontent.com/vergaranico292-code/Repuestos/main/MP1000.png";
-
     const piezas = [
-        // IZQUIERDA
         { n: "Feed Plate", x: 8, y: 3, s: "100-001" },
         { n: "Locking Bolt", x: 9, y: 6, s: "100-002" },
         { n: "Torch Ring", x: 8, y: 9, s: "100-003" },
-        
         { n: "Clamp Ring", x: 9, y: 23, s: "100-004" },
         { n: "Clamping Cylinder", x: 12, y: 26, s: "100-005" },
         { n: "Adjustment Ring", x: 11.5, y: 29.8, s: "100-006" },
-        { n: "Tramp Release Cylinder", x: 15.5, y: 32.5, s: "100-007" }, //
-        
+        { n: "Tramp Release Cylinder", x: 15.5, y: 32.5, s: "100-007" },
         { n: "Head Ball", x: 8, y: 50, s: "100-008" },
         { n: "Head", x: 5, y: 53, s: "100-009" },
         { n: "Upper Head Bushing", x: 13, y: 56, s: "100-010" },
         { n: "Mantle", x: 6, y: 59, s: "100-011" },
         { n: "T-Seal", x: 6, y: 62, s: "100-012" },
-        { n: "Lower Head Bushing", x: 15.5, y: 65, s: "100-013" }, //
-        
+        { n: "Lower Head Bushing", x: 15.5, y: 65, s: "100-013" },
         { n: "Mainframe Liner", x: 12, y: 77, s: "100-014" },
         { n: "U-Seal", x: 6, y: 80, s: "100-015" },
         { n: "Arm Guard", x: 9, y: 83, s: "100-016" },
         { n: "Mainshaft", x: 8.5, y: 86, s: "100-017" },
         { n: "Thrust Washer", x: 12, y: 89, s: "100-018" },
         { n: "Mainframe", x: 9, y: 92, s: "100-019" },
-
-       // DERECHA
-    
         { n: "Feed Hopper", x: 90, y: 2, s: "200-001" },
         { n: "Bowl Liner", x: 91, y: 5, s: "200-002" },
         { n: "Adjustment Cap", x: 89, y: 8, s: "200-003" },
         { n: "Bowl", x: 95, y: 11, s: "200-004" },
-    
         { n: "Pin", x: 94.5, y: 20, s: "200-005" },
         { n: "Socket Liner", x: 91, y: 23, s: "200-006" },
         { n: "Socket", x: 94, y: 26, s: "200-007" },
-    
         { n: "Hardware", x: 93, y: 34.5, s: "200-008" },
         { n: "Bowl Adapter Ring", x: 87, y: 37.5, s: "200-009" },
         { n: "Mainframe Seat Liner", x: 85, y: 40.5, s: "200-010" },
-    
         { n: "Eccentric", x: 93, y: 50, s: "200-011" },
         { n: "Eccentric Bushing", x: 89, y: 53, s: "200-012" },
         { n: "Counterweight", x: 90, y: 56, s: "200-013" },
         { n: "Counterweight Guard", x: 85, y: 59, s: "200-014" },
         { n: "Thrust Bearing", x: 90, y: 62, s: "200-015" },
         { n: "Gear", x: 96, y: 65, s: "200-016" },
-    
         { n: "Countershaft Box", x: 89, y: 74, s: "200-017" },
         { n: "Countershaft Box Guard", x: 83, y: 77, s: "200-018" },
         { n: "Flinger Housing", x: 89, y: 80, s: "200-019" },
@@ -113,9 +110,11 @@
     const container = document.getElementById('zoom-container');
     const layer = document.getElementById('hotspots-layer');
 
-    window.onload = () => {
-        img.src = URL_IMAGEN;
-        img.onload = renderHotspots;
+    img.src = URL_IMAGEN;
+    img.onload = () => {
+        container.style.width = img.clientWidth + "px";
+        container.style.height = img.clientHeight + "px";
+        renderHotspots();
     };
 
     function renderHotspots() {
@@ -135,7 +134,6 @@
         });
     }
 
-    // Zoom y Pan con Hammer.js
     const mc = new Hammer.Manager(document.getElementById('viewport'));
     mc.add(new Hammer.Pinch());
     mc.add(new Hammer.Pan());
@@ -157,7 +155,15 @@
     function updateTransform() {
         container.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
     }
+
+    function resetView() {
+        scale = 1; lastScale = 1; posX = 0; posY = 0; lastPosX = 0; lastPosY = 0;
+        container.style.width = img.clientWidth + "px";
+        container.style.height = img.clientHeight + "px";
+        updateTransform();
+    }
+
+    window.addEventListener('resize', resetView);
 </script>
 </body>
 </html>
-
