@@ -3,51 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Repuestos MP1000 - Precisión Móvil</title>
+    <title>Repuestos Chancadores - Precisión Móvil</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
     <style>
-        body { font-family: sans-serif; background: #1a1a1a; color: white; margin: 0; overflow: hidden; touch-action: none; }
-        .header { background: #333; padding: 10px; text-align: center; border-bottom: 2px solid #ff9900; z-index: 100; position: relative; height: 50px; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a1a; color: white; margin: 0; overflow: hidden; touch-action: none; }
+        
+        /* Navegación Superior */
+        .navbar {
+            display: flex;
+            background: #222;
+            border-bottom: 2px solid #ff9900;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px;
+            z-index: 1000;
+            position: relative;
+        }
+        .nav-btn {
+            background: #333;
+            color: #bbb;
+            border: 1px solid #444;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9em;
+            transition: all 0.2s ease;
+            flex: 1;
+            max-width: 120px;
+            text-align: center;
+        }
+        .nav-btn.active {
+            background: #ff9900;
+            border-color: #ff9900;
+            color: #000;
+            box-shadow: 0 0 10px rgba(255, 153, 0, 0.3);
+        }
+
+        .header { background: #333; padding: 8px; text-align: center; z-index: 100; position: relative; }
+        
+        /* Contenedor Principal */
         #viewport { 
             width: 100vw; 
-            height: calc(100vh - 50px); 
+            height: calc(100vh - 115px); 
             cursor: grab; 
             overflow: hidden; 
             position: relative; 
-            background: #222;
+            background: #111;
             display: flex;
             align-items: center;
             justify-content: center;
         }
         #zoom-container { position: relative; transform-origin: center; }
-        /* Imagen responsiva pero contenida */
-        #img-chancador { max-height: 85vh; max-width: 95vw; display: block; pointer-events: none; }
-        
+        #img-chancador { max-height: 80vh; max-width: 95vw; display: block; pointer-events: none; }
         #hotspots-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         
-        /* TAMAÑO ORIGINAL RESTAURADO */
+        /* Estilo de los puntos */
         .hotspot {
             position: absolute;
-            width: 7px; height: 7px; /* Tamaño original */
+            width: 10px; height: 10px;
             background: rgba(255, 153, 0, 0.8);
             border: 2px solid #fff;
-            border-radius: 90%;
+            border-radius: 50%;
             transform: translate(-50%, -50%);
             z-index: 10;
-            box-shadow: 0 0 8px rgba(255, 153, 0, 0.5);
+            box-shadow: 0 0 8px rgba(255,153,0,0.8);
         }
 
+        /* Modal */
         #modal {
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: #2c2c2c; padding: 15px; border-radius: 12px;
-            border: 2px solid #ff9900; width: 85%; display: none; z-index: 1000;
+            background: #2c2c2c; padding: 20px; border-radius: 12px;
+            border: 2px solid #ff9900; width: 85%; display: none; z-index: 2000;
+            box-shadow: 0 -5px 25px rgba(0,0,0,0.5);
         }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <strong style="color: #ff9900;">VISOR MP1000</strong>
+    <strong id="titulo-visor" style="color: #ff9900; letter-spacing: 1px;">SELECCIONE EQUIPO</strong>
+</div>
+
+<div class="navbar">
+    <button class="nav-btn active" onclick="cambiarChancador('mp')">MP</button>
+    <button class="nav-btn" onclick="cambiarChancador('symons')">SYMONS</button>
+    <button class="nav-btn" onclick="cambiarChancador('sandvik')">SANDVIK</button>
 </div>
 
 <div id="viewport">
@@ -58,77 +99,110 @@
 </div>
 
 <div id="modal">
-    <h3 id="m-nombre" style="color:#ff9900; margin:0 0 5px 0;">Pieza</h3>
-    <p style="margin:5px 0;"><strong>Código SAP:</strong> <span id="m-codigo"></span></p>
-    <button onclick="this.parentElement.style.display='none'" style="width:100%; padding:10px; background:#ff9900; color:white; border:none; border-radius:5px; font-weight:bold; cursor: pointer;">CERRAR</button>
+    <h3 id="m-nombre" style="color:#ff9900; margin:0 0 10px 0; font-size: 1.2em;">Pieza</h3>
+    <p style="margin:5px 0; font-size: 1.1em;"><strong>Código SAP:</strong> <span id="m-codigo" style="color: #ddd;"></span></p>
+    <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:15px; padding:12px; background:#ff9900; color:white; border:none; border-radius:6px; font-weight:bold; cursor: pointer;">CERRAR</button>
 </div>
 
 <script>
-    const URL_IMAGEN = "https://raw.githubusercontent.com/vergaranico292-code/Repuestos/main/MP1000.png";
-    const piezas = [
-        { n: "Feed Plate", x: 8, y: 3, s: "100-001" },
-        { n: "Locking Bolt", x: 9, y: 6, s: "100-002" },
-        { n: "Torch Ring", x: 8, y: 9, s: "100-003" },
-        { n: "Clamp Ring", x: 9, y: 23, s: "100-004" },
-        { n: "Clamping Cylinder", x: 12, y: 26, s: "100-005" },
-        { n: "Adjustment Ring", x: 11.5, y: 29.8, s: "100-006" },
-        { n: "Tramp Release Cylinder", x: 15.5, y: 32.5, s: "100-007" },
-        { n: "Head Ball", x: 8, y: 50, s: "100-008" },
-        { n: "Head", x: 5, y: 53, s: "100-009" },
-        { n: "Upper Head Bushing", x: 13, y: 56, s: "100-010" },
-        { n: "Mantle", x: 6, y: 59, s: "100-011" },
-        { n: "T-Seal", x: 6, y: 62, s: "100-012" },
-        { n: "Lower Head Bushing", x: 15.5, y: 65, s: "100-013" },
-        { n: "Mainframe Liner", x: 12, y: 77, s: "100-014" },
-        { n: "U-Seal", x: 6, y: 80, s: "100-015" },
-        { n: "Arm Guard", x: 9, y: 83, s: "100-016" },
-        { n: "Mainshaft", x: 8.5, y: 86, s: "100-017" },
-        { n: "Thrust Washer", x: 12, y: 89, s: "100-018" },
-        { n: "Mainframe", x: 9, y: 92, s: "100-019" },
-        { n: "Feed Hopper", x: 90, y: 2, s: "200-001" },
-        { n: "Bowl Liner", x: 91, y: 5, s: "200-002" },
-        { n: "Adjustment Cap", x: 89, y: 8, s: "200-003" },
-        { n: "Bowl", x: 95, y: 11, s: "200-004" },
-        { n: "Pin", x: 94.5, y: 20, s: "200-005" },
-        { n: "Socket Liner", x: 91, y: 23, s: "200-006" },
-        { n: "Socket", x: 94, y: 26, s: "200-007" },
-        { n: "Hardware", x: 93, y: 34.5, s: "200-008" },
-        { n: "Bowl Adapter Ring", x: 87, y: 37.5, s: "200-009" },
-        { n: "Mainframe Seat Liner", x: 85, y: 40.5, s: "200-010" },
-        { n: "Eccentric", x: 93, y: 50, s: "200-011" },
-        { n: "Eccentric Bushing", x: 89, y: 53, s: "200-012" },
-        { n: "Counterweight", x: 90, y: 56, s: "200-013" },
-        { n: "Counterweight Guard", x: 85, y: 59, s: "200-014" },
-        { n: "Thrust Bearing", x: 90, y: 62, s: "200-015" },
-        { n: "Gear", x: 96, y: 65, s: "200-016" },
-        { n: "Countershaft Box", x: 89, y: 74, s: "200-017" },
-        { n: "Countershaft Box Guard", x: 83, y: 77, s: "200-018" },
-        { n: "Flinger Housing", x: 89, y: 80, s: "200-019" },
-        { n: "Oil Flinger", x: 92, y: 83, s: "200-020" },
-        { n: "Countershaft Bushing", x: 84, y: 86, s: "200-021" },
-        { n: "Countershaft", x: 90, y: 89, s: "200-022" },
-        { n: "Pinion", x: 94.5, y: 92, s: "200-023" }
-    ];
+    const dataChancadores = {
+        mp: {
+            titulo: "REPUESTOS MP1000",
+            imagen: "https://raw.githubusercontent.com/vergaranico292-code/Repuestos/main/MP1000.png",
+            piezas: [
+                { n: "Feed Plate", x: 8.5, y: 3, s: "100-001" },
+                { n: "Locking Bolt", x: 10, y: 6, s: "100-002" },
+                { n: "Torch Ring", x: 8.5, y: 9, s: "100-003" },
+                { n: "Clamp Ring", x: 9, y: 23, s: "100-004" },
+                { n: "Clamping Cylinder", x: 12, y: 26, s: "100-005" },
+                { n: "Adjustment Ring", x: 12, y: 29.8, s: "100-006" },
+                { n: "Tramp Release Cylinder", x: 15.5, y: 32.5, s: "100-007" },
+                { n: "Head Ball", x: 8, y: 50, s: "100-008" },
+                { n: "Head", x: 5.5, y: 53, s: "100-009" },
+                { n: "Upper Head Bushing", x: 14.5, y: 56, s: "100-010" },
+                { n: "Mantle", x: 6.5, y: 59, s: "100-011" },
+                { n: "T-Seal", x: 6, y: 62, s: "100-012" },
+                { n: "Lower Head Bushing", x: 14.5, y: 65, s: "100-013" },
+                { n: "Mainframe Liner", x: 12, y: 77, s: "100-014" },
+                { n: "U-Seal", x: 6, y: 80, s: "100-015" },
+                { n: "Arm Guard", x: 9.5, y: 83, s: "100-016" },
+                { n: "Mainshaft", x: 8.5, y: 86.5, s: "100-017" },
+                { n: "Thrust Washer", x: 12, y: 89, s: "100-018" },
+                { n: "Mainframe", x: 9, y: 92, s: "100-019" },
+                
+                
+                { n: "Feed Hopper", x: 90, y: 2, s: "200-001" },
+                { n: "Bowl Liner", x: 91.5, y: 5.5, s: "200-002" },
+                { n: "Adjustment Cap", x: 88.5, y: 8.5, s: "200-003" },
+                { n: "Bowl", x: 95, y: 11, s: "200-004" },
+                { n: "Pin", x: 96, y: 20, s: "200-005" },
+                { n: "Socket Liner", x: 90, y: 23, s: "200-006" },
+                { n: "Socket", x: 94, y: 26, s: "200-007" },
+                { n: "Hardware", x: 92, y: 34.5, s: "200-008" },
+                { n: "Bowl Adapter Ring", x: 87, y: 37.5, s: "200-009" },
+                { n: "Mainframe Seat Liner", x: 85, y: 40.5, s: "200-010" },
+                { n: "Eccentric", x: 92, y: 50, s: "200-011" },
+                { n: "Eccentric Bushing", x: 87, y: 53, s: "200-012" },
+                { n: "Counterweight", x: 89, y: 56.5, s: "200-013" },
+                { n: "Counterweight Guard", x: 85, y: 59, s: "200-014" },
+                { n: "Thrust Bearing", x: 89, y: 62, s: "200-015" },
+                { n: "Gear", x: 95, y: 65, s: "200-016" },
+                { n: "Countershaft Box", x: 87.5, y: 74, s: "200-017" },
+                { n: "Countershaft Box Guard", x: 83, y: 77, s: "200-018" },
+                { n: "Flinger Housing", x: 88.5, y: 80, s: "200-019" },
+                { n: "Oil Flinger", x: 92, y: 83, s: "200-020" },
+                { n: "Countershaft Bushing", x: 84, y: 86, s: "200-021" },
+                { n: "Countershaft", x: 90, y: 89, s: "200-022" },
+                { n: "Pinion", x: 94, y: 92, s: "200-023" }
+            ]
+        },
+        symons: {
+            titulo: "REPUESTOS SYMONS",
+            imagen: "URL_DE_TU_IMAGEN_SYMONS.png",
+            piezas: [
+                { n: "Ejemplo Symons 1", x: 50, y: 50, s: "SYM-001" }
+            ]
+        },
+        sandvik: {
+            titulo: "REPUESTOS SANDVIK",
+            imagen: "URL_DE_TU_IMAGEN_SANDVIK.png",
+            piezas: [
+                { n: "Ejemplo Sandvik 1", x: 40, y: 60, s: "SK-900" }
+            ]
+        }
+    };
 
+    let chancadorActual = 'mp';
     const img = document.getElementById('img-chancador');
     const container = document.getElementById('zoom-container');
     const layer = document.getElementById('hotspots-layer');
+    const titulo = document.getElementById('titulo-visor');
 
-    // Carga inicial
-    img.src = URL_IMAGEN;
-    img.onload = () => {
-        comportamientoPostCarga();
-    };
+    function cambiarChancador(marca) {
+        chancadorActual = marca;
+        
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if(btn.innerText.toLowerCase() === marca) btn.classList.add('active');
+        });
 
-    function comportamientoPostCarga() {
-        // Asegurar que el contenedor mida lo mismo que la imagen escalada
-        container.style.width = img.clientWidth + "px";
-        container.style.height = img.clientHeight + "px";
-        renderHotspots();
+        const data = dataChancadores[marca];
+        titulo.innerText = data.titulo;
+        img.src = data.imagen;
+        
+        document.getElementById('modal').style.display = 'none';
+        resetView();
+        
+        img.onload = () => {
+            container.style.width = img.clientWidth + "px";
+            container.style.height = img.clientHeight + "px";
+            renderHotspots();
+        };
     }
 
     function renderHotspots() {
         layer.innerHTML = '';
+        const piezas = dataChancadores[chancadorActual].piezas;
         piezas.forEach(p => {
             const div = document.createElement('div');
             div.className = 'hotspot';
@@ -144,7 +218,7 @@
         });
     }
 
-    // --- Hammer.js para Zoom y Pan ---
+    // Lógica de Zoom y Pan
     const mc = new Hammer.Manager(document.getElementById('viewport'));
     mc.add(new Hammer.Pinch());
     mc.add(new Hammer.Pan({ direction: Hammer.DIRECTION_ALL, threshold: 0 }));
@@ -156,35 +230,31 @@
         updateTransform();
     });
     mc.on("pinchend", () => lastScale = scale);
-    
     mc.on("panmove", (e) => {
-        // Solo permitir pan si hay zoom
         if (scale > 1) {
             posX = lastPosX + e.deltaX;
             posY = lastPosY + e.deltaY;
             updateTransform();
         }
     });
-    mc.on("panend", () => { 
-        lastPosX = posX; 
-        lastPosY = posY; 
-    });
+    mc.on("panend", () => { lastPosX = posX; lastPosY = posY; });
 
     function updateTransform() {
         container.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
     }
 
-    // --- Corrección para el giro de pantalla ---
     function resetView() {
-        // Resetear variables de estado
         scale = 1; lastScale = 1; posX = 0; posY = 0; lastPosX = 0; lastPosY = 0;
         updateTransform();
-        // Recalcular tamaño del contenedor y redibujar puntos
-        comportamientoPostCarga();
     }
 
-    // Escuchar cambios de tamaño (giro de teléfono)
-    window.addEventListener('resize', resetView);
+    // Iniciar con MP
+    cambiarChancador('mp');
+
+    window.addEventListener('resize', () => {
+        container.style.width = img.clientWidth + "px";
+        container.style.height = img.clientHeight + "px";
+    });
 </script>
 </body>
 </html>
