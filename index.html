@@ -20,12 +20,15 @@
             justify-content: center;
         }
         #zoom-container { position: relative; transform-origin: center; }
+        /* Imagen responsiva pero contenida */
         #img-chancador { max-height: 85vh; max-width: 95vw; display: block; pointer-events: none; }
         
         #hotspots-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        
+        /* TAMAÑO ORIGINAL RESTAURADO */
         .hotspot {
             position: absolute;
-            width: 14px; height: 14px;
+            width: 14px; height: 14px; /* Tamaño original */
             background: rgba(255, 153, 0, 0.8);
             border: 2px solid #fff;
             border-radius: 50%;
@@ -55,9 +58,9 @@
 </div>
 
 <div id="modal">
-    <h3 id="m-nombre" style="color:#ff9900; margin:0;">Pieza</h3>
-    <p><strong>Código:</strong> <span id="m-codigo"></span></p>
-    <button onclick="this.parentElement.style.display='none'" style="width:100%; padding:10px; background:#ff9900; color:white; border:none; border-radius:5px; font-weight:bold;">CERRAR</button>
+    <h3 id="m-nombre" style="color:#ff9900; margin:0 0 5px 0;">Pieza</h3>
+    <p style="margin:5px 0;"><strong>Código SAP:</strong> <span id="m-codigo"></span></p>
+    <button onclick="this.parentElement.style.display='none'" style="width:100%; padding:10px; background:#ff9900; color:white; border:none; border-radius:5px; font-weight:bold; cursor: pointer;">CERRAR</button>
 </div>
 
 <script>
@@ -111,12 +114,18 @@
     const container = document.getElementById('zoom-container');
     const layer = document.getElementById('hotspots-layer');
 
+    // Carga inicial
     img.src = URL_IMAGEN;
     img.onload = () => {
+        comportamientoPostCarga();
+    };
+
+    function comportamientoPostCarga() {
+        // Asegurar que el contenedor mida lo mismo que la imagen escalada
         container.style.width = img.clientWidth + "px";
         container.style.height = img.clientHeight + "px";
         renderHotspots();
-    };
+    }
 
     function renderHotspots() {
         layer.innerHTML = '';
@@ -135,9 +144,10 @@
         });
     }
 
+    // --- Hammer.js para Zoom y Pan ---
     const mc = new Hammer.Manager(document.getElementById('viewport'));
     mc.add(new Hammer.Pinch());
-    mc.add(new Hammer.Pan());
+    mc.add(new Hammer.Pan({ direction: Hammer.DIRECTION_ALL, threshold: 0 }));
 
     let scale = 1, lastScale = 1, posX = 0, posY = 0, lastPosX = 0, lastPosY = 0;
 
@@ -146,24 +156,34 @@
         updateTransform();
     });
     mc.on("pinchend", () => lastScale = scale);
+    
     mc.on("panmove", (e) => {
-        posX = lastPosX + e.deltaX;
-        posY = lastPosY + e.deltaY;
-        updateTransform();
+        // Solo permitir pan si hay zoom
+        if (scale > 1) {
+            posX = lastPosX + e.deltaX;
+            posY = lastPosY + e.deltaY;
+            updateTransform();
+        }
     });
-    mc.on("panend", () => { lastPosX = posX; lastPosY = posY; });
+    mc.on("panend", () => { 
+        lastPosX = posX; 
+        lastPosY = posY; 
+    });
 
     function updateTransform() {
         container.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
     }
 
+    // --- Corrección para el giro de pantalla ---
     function resetView() {
+        // Resetear variables de estado
         scale = 1; lastScale = 1; posX = 0; posY = 0; lastPosX = 0; lastPosY = 0;
-        container.style.width = img.clientWidth + "px";
-        container.style.height = img.clientHeight + "px";
         updateTransform();
+        // Recalcular tamaño del contenedor y redibujar puntos
+        comportamientoPostCarga();
     }
 
+    // Escuchar cambios de tamaño (giro de teléfono)
     window.addEventListener('resize', resetView);
 </script>
 </body>
